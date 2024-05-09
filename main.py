@@ -1,14 +1,15 @@
 import numpy as np
 from math import *
 import tkinter as tk
+from Asteroid import Asteroid
 
 
 #軌道傾斜（地球基準）
 i = 0
 #昇交点黄経
-ω = 174.848
+Ω = 174.848
 #近日点引数
-Ω = 102.972
+ω = 102.972
 #軌道長半径 (AU)
 a = 1.0000
 #離心率
@@ -40,62 +41,39 @@ class App(tk.Frame):
             fill="#ffff00",
             width=0
             )
-        self.plot(self.calc_position(2460390.00486))
-        #self.plot(self.calc_position(2460438.50000))
+        venus = Asteroid(
+            3.395, 76.651, 131.564,
+            0.7233, 0.0068, 107.429, 224.701
+        )
+        earth = Asteroid(
+            0.0, 174.848, 102.972,
+            1.000, 0.0167, 197.510, 365.24219
+        )
+        mars = Asteroid(
+            1.849, 49.527, 336.107,
+            1.5237, 0.0934, 239.735, 686.980
+        )
 
-    def plot(self, position :np.ndarray):
-        print(position)
-        x = position[0][0] * 100
-        y = position[1][0] * 100
+        for i in range(1):
+            self.plot(venus.get_position(2460438.50000+i), "#888800")
+            self.plot(earth.get_position(2460438.50000+i), "#5555ff")
+            self.plot(mars.get_position(2460438.50000+i), "#ff0000")
+
+    def plot(self, position :np.ndarray, color : str):
+        x = position[0][0] * 200
+        y = position[1][0] * 200
         self.canvas.create_oval(
-            self.__to_canvas_x(x),self.__to_canvas_y(y),
-            self.__to_canvas_x(x+1),self.__to_canvas_y(y+1),
-            fill="#fff",
+            self.__to_canvas_x(x-2),self.__to_canvas_y(y-2),
+            self.__to_canvas_x(x+2),self.__to_canvas_y(y+2),
+            fill=color,
             width=0
         )
 
-    def calc_position(self, t):
-        E = self.__calc_E(self.__calc_M(t))
-
-        X = a * sin(E)
-        Y = sqrt(1 - e ** 2) * a * cos(E)
-
-        a1 = np.array([
-            [cos(Ω), -sin(Ω), 0],
-            [sin(Ω), cos(Ω), 0],
-            [0, 0, 1]
-        ])
-        a2 = np.array([
-            [1, 0],
-            [0, cos(i)],
-            [0, sin(i)]
-        ])
-        a3 = np.array([
-            [cos(ω), -sin(ω)],
-            [sin(ω), cos(ω)]
-        ])
-        a4 = np.array([
-            [X - a * e],
-            [Y]
-        ])
-
-        return a1 @ a2 @ a3 @ a4
-
-    def __calc_E(self, M):
-        E = M
-        for j in range(10):
-            E = E - (M - E + e * sin(E)) / (e * cos(E) - 1)
-        return E
-
-    def __calc_M(self, T):
-        M = M0 + 2 * pi * (T - T0) / 365.24219
-        return M
-
     def __to_canvas_x(self, x):
-        return CANVAS_WIDTH / 2 + x
+        return CANVAS_WIDTH / 2 + int(x)
 
     def __to_canvas_y(self, y):
-        return CANVAS_HEIGHT / 2 - y
+        return CANVAS_HEIGHT / 2 - int(y)
 
 if __name__ == "__main__":
     root = tk.Tk()
