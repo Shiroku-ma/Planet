@@ -5,7 +5,7 @@ from math import sin, cos, pi, sqrt, radians
 class Asteroid():
     T0 = 2460400.5 # 2024/3/31
 
-    def __init__(self, i , Ω , _ω , a , e , M0 , P ):
+    def __init__(self, i , Ω , _ω , a , e , M0 , P , color, name):
         """
         Paramaters
         ----------
@@ -23,6 +23,10 @@ class Asteroid():
             ユリウス日2455400.5における平均近点角
         P : float
             公転周期
+        color : str
+            色
+        name : str
+            名前
         """
         self.i = radians(i)
         self.Ω = radians(Ω)
@@ -31,8 +35,14 @@ class Asteroid():
         self.e = e
         self.M0 = radians(M0)
         self.P = P
+        self.color = color
+        self.name = name
+        self.date_cache = None
+        self.pos_cache = None
     
     def get_position(self, t):
+        if t == self.date_cache:
+            return self.pos_cache
         E = self.__calc_E(self.__calc_M(t))
         
         X = self.a * cos(E)
@@ -57,7 +67,9 @@ class Asteroid():
             [Y]
         ])
         
-        return a1 @ a2 @ a3 @ a4
+        self.pos_cache = a1 @ a2 @ a3 @ a4
+        self.date_cache = t
+        return self.pos_cache
 
     def __calc_E(self, M):
         E = M
