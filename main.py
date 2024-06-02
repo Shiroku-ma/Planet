@@ -62,8 +62,13 @@ class App(tk.Frame):
         
         self.date = now
         self.zoom = 200
+        self.angle_x = 0
+        self.angle_z = 0
+        self.create_win2()
         self.draw_orbit()
         self.plot_all()
+        self.to_jd(2024, 6, 1)
+        self.to_date(2460462.5)
 
         root.bind("<KeyPress>", self.key_event)
 
@@ -81,6 +86,24 @@ class App(tk.Frame):
             self.date -= 1
         if key == "Up" or key == "Down" or key == "Right" or key == "Left":
             self.plot_all()
+        if key == "w":
+            if self.angle_x < 90:
+                self.angle_x += 10
+                self.draw_orbit()
+                self.plot_all()
+        if key == "s":
+            if self.angle_x > 0:
+                self.angle_x -= 10
+                self.draw_orbit()
+                self.plot_all()
+        if key == "d":
+            self.angle_z += 10
+            self.draw_orbit()
+            self.plot_all()
+        if key == "a":
+            self.angle_z -= 10
+            self.draw_orbit()
+            self.plot_all()
             
     def draw_orbit(self):
         self.canvas.delete("orbit")
@@ -95,9 +118,34 @@ class App(tk.Frame):
             self.canvas.delete(ast.name)
             self.plot(ast.get_position(self.date), ast.color, ast.name, 4)
 
+    def plot_xr(self):
+        for ast in [mercury,venus,earth,mars,jupiter,saturn]:
+            self.canvas.delete(ast.name)
+            r = radians(45)
+            a = np.array([
+                [1.0,0,0],
+                [0,cos(r),-sin(r)],
+                [0,sin(r),cos(r)]
+            ])
+            ar = a @ ast.get_position(self.date)
+            self.plot(ar, ast.color, ast.name, 4)
+
     def plot(self, position :np.ndarray, color : str, name, weight):
-        x = position[0][0] * self.zoom
-        y = position[1][0] * self.zoom
+        x = radians(self.angle_x)
+        z = radians(self.angle_z)
+        xr = np.array([
+            [1.0,0,0],
+            [0,cos(x),-sin(x)],
+            [0,sin(x),cos(x)]
+        ])
+        zr = np.array([
+            [cos(z),-sin(z),0],
+            [sin(z),cos(z),0],
+            [0,0,1.0]
+        ])
+        pos = xr @ zr @ position
+        x = pos[0][0] * self.zoom
+        y = pos[1][0] * self.zoom
         self.canvas.create_oval(
             self.__to_canvas_x(x-weight),self.__to_canvas_y(y-weight),
             self.__to_canvas_x(x+weight),self.__to_canvas_y(y+weight),
@@ -111,6 +159,69 @@ class App(tk.Frame):
 
     def __to_canvas_y(self, y):
         return CANVAS_HEIGHT / 2 - y    
+
+    def to_jd(self, year, month, day):
+        mjd = floor(year * 365.25) + floor(year/400) - floor(year/100) + floor(30.59 * (month - 2)) + day - 678912.0 + 2400000.5
+        return mjd
+    
+    def to_date(self, jd):
+        n = jd - 2400000.5 + 678881
+        a = 4*n + 3 + 4 * floor(3 / 4 * floor(4*(n+1)/146097 + 1))
+        b = 5 * floor((a % 1461) / 4) +2
+        y = floor(a/1461)
+        m = floor(b/153) + 3
+        d = floor((b%153)/5) + 1
+        return [y,m,d]
+    
+    def date_changed(self):
+        jd = self.to_jd(float(self.spinbox_y.get()), float(self.spinbox_m.get()), float(self.spinbox_d.get()))
+        self.date = jd
+        self.plot_all()
+
+    
+    def create_win2(self):
+        self.controller = tk.Toplevel(self)
+        self.controller.geometry("220x300")
+        self.controller.title(u"Controller")
+        self.spinbox_y = tk.Spinbox(
+            self.controller,
+            from_=1583, to=3000, increment=1,
+            command=self.date_changed,
+            width=5,
+            textvariable=tk.IntVar(value=2024)
+            )
+        self.spinbox_m = tk.Spinbox(
+            self.controller,
+            from_=1, to=12, increment=1,
+            command=self.date_changed,
+            width=2,
+            textvariable=tk.IntVar(value=1)
+            )
+        self.spinbox_d = tk.Spinbox(
+            self.controller,
+            from_=1, to=31, increment=1,
+            command=self.date_changed,
+            width=2,
+            textvariable=tk.IntVar(value=1)
+            )
+        label_y = tk.Label(
+            self.controller,
+            text="年",   #表示文字
+            )
+        label_m = tk.Label(
+            self.controller,
+            text="月",   #表示文字
+            )
+        label_d = tk.Label(
+            self.controller,
+            text="日",   #表示文字
+            )
+        self.spinbox_y.pack(side=tk.LEFT)
+        label_y.pack(side=tk.LEFT)
+        self.spinbox_m.pack(side=tk.LEFT)
+        label_m.pack(side=tk.LEFT)
+        self.spinbox_d.pack(side=tk.LEFT)
+        label_d.pack(side=tk.LEFT)
 
 if __name__ == "__main__":
     root = tk.Tk()
