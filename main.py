@@ -79,6 +79,7 @@ class App(tk.Frame):
         self.zoom = 200
         self.angle_x = 0
         self.angle_z = 0
+        self.cache_orbit()
         self.create_win2()
         self.draw_orbit()
         self.plot_all()
@@ -120,31 +121,27 @@ class App(tk.Frame):
             self.label_angle_z["text"] = f"z軸: {self.angle_z:4}"
             self.draw_orbit()
             self.plot_all()
+
+    def cache_orbit(self):
+        self.cached_orbit = {}
+        for ast in [mercury,venus,earth,mars,jupiter,saturn,uranus,neptune,pluto]:
+            self.cached_orbit[ast.name] = []
+            i = 0
+            h = ast.P / 180
+            for j in range(180):
+                self.cached_orbit[ast.name].append(ast.get_position(i))
+                i += h
             
     def draw_orbit(self):
         self.canvas.delete("orbit")
         for ast in [mercury,venus,earth,mars,jupiter,saturn,uranus,neptune,pluto]:
-            i = 0
-            while(i < floor(ast.P) + 1):
-                self.plot(ast.get_position(i), "#fff", "orbit", 0.5)
-                i += floor(ast.P) / 180
+            for j in range(180):
+                self.plot(self.cached_orbit[ast.name][j], "#fff", "orbit", 0.5)
 
     def plot_all(self):
         for ast in [mercury,venus,earth,mars,jupiter,saturn,uranus,neptune,pluto]:
             self.canvas.delete(ast.name)
             self.plot(ast.get_position(self.date), ast.color, ast.name, 4)
-
-    def plot_xr(self):
-        for ast in [mercury,venus,earth,mars,jupiter,saturn,uranus,neptune,pluto]:
-            self.canvas.delete(ast.name)
-            r = radians(45)
-            a = np.array([
-                [1.0,0,0],
-                [0,cos(r),-sin(r)],
-                [0,sin(r),cos(r)]
-            ])
-            ar = a @ ast.get_position(self.date)
-            self.plot(ar, ast.color, ast.name, 4)
 
     def plot(self, position :np.ndarray, color : str, name, weight):
         x = radians(self.angle_x)
