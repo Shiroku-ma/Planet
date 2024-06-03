@@ -38,6 +38,21 @@ saturn = Asteroid(
     9.5549, 0.0555, 253.185, 10759.2423,
     "#a98c56", "saturn"
 )
+uranus = Asteroid(
+    0.773, 74.024, 173.027,
+    19.2184, 0.0464, 244.910, 30688.4876,
+    "#0fcab3", "uranus"
+)
+neptune = Asteroid(
+    1.770, 131.783, 48.127,
+    30.1104, 0.0095, 309.193, 60182.2790,
+    "#008cff", "neptune"
+)
+pluto = Asteroid(
+    17.1, 110.3, 225.0,
+    39.592, 0.248, 47.9, 90582.00,
+    "#bcbcbc", "pluto"
+)
 
 class App(tk.Frame):
     def __init__(self, root: tk.Tk):
@@ -67,59 +82,60 @@ class App(tk.Frame):
         self.create_win2()
         self.draw_orbit()
         self.plot_all()
-        self.to_jd(2024, 6, 1)
-        self.to_date(2460462.5)
 
         root.bind("<KeyPress>", self.key_event)
 
     def key_event(self, e):
         key = e.keysym
-        if key == "Up":
-            self.zoom += 10
-            self.draw_orbit()
-        if key == "Down":
-            self.zoom -= 10
-            self.draw_orbit()
-        if key == "Right":
-            self.date += 1
-        if key == "Left":
-            self.date -= 1
-        if key == "Up" or key == "Down" or key == "Right" or key == "Left":
-            self.plot_all()
-        if key == "w":
-            if self.angle_x < 90:
-                self.angle_x += 10
+        if key in ["Up", "Down", "Right", "Left"]:
+            if key == "Up":
+                self.zoom += 5
+                self.label_zoom["text"] = f"倍率: {self.zoom:3}"
                 self.draw_orbit()
-                self.plot_all()
-        if key == "s":
-            if self.angle_x > 0:
-                self.angle_x -= 10
+            if key == "Down":
+                self.zoom -= 5
+                self.label_zoom["text"] = f"倍率: {self.zoom:3}"
                 self.draw_orbit()
-                self.plot_all()
-        if key == "d":
-            self.angle_z += 10
-            self.draw_orbit()
+            if key == "Right":
+                self.date += 1
+            if key == "Left":
+                self.date -= 1
             self.plot_all()
-        if key == "a":
-            self.angle_z -= 10
+        if key in ["s", "w", "a", "d"]:
+            if key == "s":
+                if self.angle_x < 90:
+                    self.angle_x += 5
+            if key == "w":
+                if self.angle_x > 0:
+                    self.angle_x -= 5
+            if key == "a":
+                self.angle_z += 5
+                if self.angle_z > 180:
+                    self.angle_z = -175
+            if key == "d":
+                self.angle_z -= 5
+                if self.angle_z <= -180:
+                    self.angle_z = 180
+            self.label_angle_x["text"] = f"x軸: {self.angle_x:4}"
+            self.label_angle_z["text"] = f"z軸: {self.angle_z:4}"
             self.draw_orbit()
             self.plot_all()
             
     def draw_orbit(self):
         self.canvas.delete("orbit")
-        for ast in [mercury,venus,earth,mars,jupiter,saturn]:
+        for ast in [mercury,venus,earth,mars,jupiter,saturn,uranus,neptune,pluto]:
             i = 0
             while(i < floor(ast.P) + 1):
                 self.plot(ast.get_position(i), "#fff", "orbit", 0.5)
                 i += floor(ast.P) / 180
 
     def plot_all(self):
-        for ast in [mercury,venus,earth,mars,jupiter,saturn]:
+        for ast in [mercury,venus,earth,mars,jupiter,saturn,uranus,neptune,pluto]:
             self.canvas.delete(ast.name)
             self.plot(ast.get_position(self.date), ast.color, ast.name, 4)
 
     def plot_xr(self):
-        for ast in [mercury,venus,earth,mars,jupiter,saturn]:
+        for ast in [mercury,venus,earth,mars,jupiter,saturn,uranus,neptune,pluto]:
             self.canvas.delete(ast.name)
             r = radians(45)
             a = np.array([
@@ -181,7 +197,7 @@ class App(tk.Frame):
     
     def create_win2(self):
         self.controller = tk.Toplevel(self)
-        self.controller.geometry("220x300")
+        self.controller.geometry("210x300")
         self.controller.title(u"Controller")
         self.spinbox_y = tk.Spinbox(
             self.controller,
@@ -204,24 +220,57 @@ class App(tk.Frame):
             width=2,
             textvariable=tk.IntVar(value=1)
             )
+        h_date = tk.Label(
+            self.controller,
+            text="日付",
+            font=("Helvetica",16)
+            )
         label_y = tk.Label(
             self.controller,
-            text="年",   #表示文字
+            text="年",
             )
         label_m = tk.Label(
             self.controller,
-            text="月",   #表示文字
+            text="月",
             )
         label_d = tk.Label(
             self.controller,
-            text="日",   #表示文字
+            text="日",
             )
-        self.spinbox_y.pack(side=tk.LEFT)
-        label_y.pack(side=tk.LEFT)
-        self.spinbox_m.pack(side=tk.LEFT)
-        label_m.pack(side=tk.LEFT)
-        self.spinbox_d.pack(side=tk.LEFT)
-        label_d.pack(side=tk.LEFT)
+        h_angle = tk.Label(
+            self.controller,
+            text="視点",
+            font=("Helvetica",16)
+            )
+        self.label_angle_x = tk.Label(
+            self.controller,
+            text="x軸:     0",
+            font=("Helvetica",14)
+            )
+        self.label_angle_z = tk.Label(
+            self.controller,
+            text="z軸:     0",
+            font=("Helvetica",14)
+            )
+        self.label_zoom = tk.Label(
+            self.controller,
+            text="倍率: 200",
+            font=("Helvetica",14)
+            )
+                
+        h_date.grid(column=0,row=0)
+        self.spinbox_y.grid(column=0,row=1)
+        label_y.grid(column=1,row=1)
+        self.spinbox_m.grid(column=2,row=1)
+        label_m.grid(column=3,row=1)
+        self.spinbox_d.grid(column=4,row=1)
+        label_d.grid(column=5,row=1)
+
+        h_angle.grid(column=0,row=2)
+        self.label_angle_x.grid(column=0,row=3,sticky=tk.W)
+        self.label_angle_z.grid(column=0,row=4,sticky=tk.W)
+        self.label_zoom.grid(column=0,row=5,sticky=tk.W)
+
 
 if __name__ == "__main__":
     root = tk.Tk()
