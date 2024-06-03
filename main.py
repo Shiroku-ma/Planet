@@ -75,8 +75,8 @@ class App(tk.Frame):
             width=0
             )
         
-        self.date = now
-        self.zoom = 200
+        self.date = self.to_jd(2024,6,1)
+        self.zoom = 0
         self.angle_x = 0
         self.angle_z = 0
         self.cache_orbit()
@@ -90,11 +90,11 @@ class App(tk.Frame):
         key = e.keysym
         if key in ["Up", "Down", "Right", "Left"]:
             if key == "Up":
-                self.zoom += 5
+                self.zoom += 1
                 self.label_zoom["text"] = f"倍率: {self.zoom:3}"
                 self.draw_orbit()
             if key == "Down":
-                self.zoom -= 5
+                self.zoom -= 1
                 self.label_zoom["text"] = f"倍率: {self.zoom:3}"
                 self.draw_orbit()
             if key == "Right":
@@ -157,8 +157,9 @@ class App(tk.Frame):
             [0,0,1.0]
         ])
         pos = xr @ zr @ position
-        x = pos[0][0] * self.zoom
-        y = pos[1][0] * self.zoom
+        _zoom = 200 * 1.05 ** self.zoom
+        x = pos[0][0] * _zoom
+        y = pos[1][0] * _zoom
         self.canvas.create_oval(
             self.__to_canvas_x(x-weight),self.__to_canvas_y(y-weight),
             self.__to_canvas_x(x+weight),self.__to_canvas_y(y+weight),
