@@ -37,12 +37,8 @@ class Asteroid():
         self.P = P
         self.color = color
         self.name = name
-        self.date_cache = None
-        self.pos_cache = None
     
     def get_position(self, t):
-        if t == self.date_cache:
-            return self.pos_cache
         E = self.__calc_E(self.__calc_M(t))
         
         X = self.a * cos(E)
@@ -66,10 +62,7 @@ class Asteroid():
             [X - self.a * self.e],
             [Y]
         ])
-        
-        self.pos_cache = a1 @ a2 @ a3 @ a4
-        self.date_cache = t
-        return self.pos_cache
+        return a1 @ a2 @ a3 @ a4
 
     def __calc_E(self, M):
         E = M
