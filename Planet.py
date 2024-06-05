@@ -2,10 +2,8 @@ import numpy as np
 from math import sin, cos, pi, sqrt, radians
 
 
-class Asteroid():
-    T0 = 2460400.5 # 2024/3/31
-
-    def __init__(self, i , Ω , _ω , a , e , M0 , P , color, name):
+class Planet():
+    def __init__(self, i , Ω , _ω , a , e , M0 , P , t0 , color, name):
         """
         Paramaters
         ----------
@@ -23,6 +21,8 @@ class Asteroid():
             ユリウス日2455400.5における平均近点角
         P : float
             公転周期
+        t0 : float
+            元期
         color : str
             色
         name : str
@@ -35,6 +35,7 @@ class Asteroid():
         self.e = e
         self.M0 = radians(M0)
         self.P = P
+        self.T0 = t0
         self.color = color
         self.name = name
     

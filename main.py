@@ -1,56 +1,15 @@
 import numpy as np
+import json
 from math import *
 import tkinter as tk
-from Asteroid import Asteroid
+from Planet import Planet
 
 CANVAS_WIDTH = 860
 CANVAS_HEIGHT = 860
 
-now = 2460462.50000
-
-mercury = Asteroid(
-    7.004, 48.300, 77.495,
-    0.3871, 0.2056, 54.463, 87.9705,
-    "#555588", "mercury"
-)
-venus = Asteroid(
-    3.394, 76.613, 131.565,
-    0.7233, 0.0068, 198.081, 224.7018,
-    "#888800", "venus"
-)
-earth = Asteroid(
-    0.003, 174.815, 103.016,
-    1.000, 0.0167, 85.512, 365.2574,
-    "#5555ff", "earth"
-)
-mars = Asteroid(
-    1.848, 49.487, 336.168,
-    1.5237, 0.0934, 339.838, 686.9805,
-    "#ff0000", "mars"
-)
-jupiter = Asteroid(
-    1.303, 100.507, 14.384,
-    5.2026, 0.0485, 35.782, 4332.5955,
-    "#a9569c", "jupiter"
-)
-saturn = Asteroid(
-    2.489, 113.603, 93.195,
-    9.5549, 0.0555, 253.185, 10759.2423,
-    "#a98c56", "saturn"
-)
-uranus = Asteroid(
-    0.773, 74.024, 173.027,
-    19.2184, 0.0464, 244.910, 30688.4876,
-    "#0fcab3", "uranus"
-)
-neptune = Asteroid(
-    1.770, 131.783, 48.127,
-    30.1104, 0.0095, 309.193, 60182.2790,
-    "#008cff", "neptune"
-)
-pluto = Asteroid(
+pluto = Planet(
     17.1, 110.3, 225.0,
-    39.592, 0.248, 47.9, 90582.00,
+    39.592, 0.248, 47.9, 90582.00, 2460400.5,
     "#bcbcbc", "pluto"
 )
 
@@ -79,12 +38,30 @@ class App(tk.Frame):
         self.zoom = 0
         self.angle_x = 0
         self.angle_z = 0
+        self.load_jsondata("2024-03-31")
         self.cache_orbit()
         self.create_win2()
         self.draw_orbit()
         self.plot_all()
 
         root.bind("<KeyPress>", self.key_event)
+
+    def load_jsondata(self, date):
+        """
+        date : YYYY-MM-DD
+        """
+        colors = {
+            "mercury": "#555588", "venus": "#888800", "earth": "#5555ff", "mars": "#ff0000",
+            "jupiter": "#a9569c", "saturn": "#a98c56", "uranus": "#0fcab3", "neptune": "#008cff"
+        }
+        file = open("./data.json", "r")
+        data = json.load(file)[date]
+        self.planets = [
+            Planet(
+                data[name]["incl"], data[name]["lan"], data[name]["lperi"], data[name]["a"], data[name]["e"], data[name]["m0"], data[name]["p"], data["epoch"],
+                colors[name], name
+            ) for name in data.keys() if name !=  "epoch"
+        ] #内包表記でゴリ押し
 
     def key_event(self, e):
         key = e.keysym
@@ -124,7 +101,7 @@ class App(tk.Frame):
 
     def cache_orbit(self):
         self.cached_orbit = {}
-        for ast in [mercury,venus,earth,mars,jupiter,saturn,uranus,neptune,pluto]:
+        for ast in self.planets:
             self.cached_orbit[ast.name] = []
             i = 0
             h = ast.P / 180
@@ -134,12 +111,12 @@ class App(tk.Frame):
             
     def draw_orbit(self):
         self.canvas.delete("orbit")
-        for ast in [mercury,venus,earth,mars,jupiter,saturn,uranus,neptune,pluto]:
+        for ast in self.planets:
             for j in range(180):
                 self.plot(self.cached_orbit[ast.name][j], "#fff", "orbit", 0.5)
 
     def plot_all(self):
-        for ast in [mercury,venus,earth,mars,jupiter,saturn,uranus,neptune,pluto]:
+        for ast in self.planets:
             self.canvas.delete(ast.name)
             self.plot(ast.get_position(self.date), ast.color, ast.name, 4)
 
